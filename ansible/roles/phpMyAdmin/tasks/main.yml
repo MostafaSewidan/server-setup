@@ -1,0 +1,39 @@
+---
+- name: Install zip
+  become: yes
+  apt:
+    name:
+      - zip
+      - unzip
+
+- name: Download phpmyadmin
+  get_url:
+    url: https://files.phpmyadmin.net/phpMyAdmin/5.0.2/phpMyAdmin-5.0.2-all-languages.zip
+    dest: /var/www/html/phpMyAdmin-5.0.2-all-languages.zip
+  become: yes
+# when: not check_path.stat.exists
+
+- name: Extract phpmyadmin
+  unarchive:
+    src: /var/www/html/phpMyAdmin-5.0.2-all-languages.zip
+    dest: /var/www/html/
+    owner: www-data
+    group: www-data
+    remote_src: yes
+  become: yes
+# when: not check_path.stat.exists
+
+- name: mv phpmyadmin
+  become: yes
+  shell: |
+    mv /var/www/html/phpMyAdmin-5.0.2-all-languages /var/www/html/pma;
+    rm /var/www/html/phpMyAdmin-5.0.2-all-languages.zip;
+
+- name: Giving file permission to files
+  become: yes
+  shell: |
+    find /var/www/html/pma -type d -exec chmod 755 {} \;
+    find /var/www/html/pma -type f -exec chmod 644 {} \;
+  notify:
+    - restart nginx
+    - restart php7.4-fpm

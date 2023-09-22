@@ -1,0 +1,48 @@
+---
+# tasks file for nginx
+
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+  become: yes
+
+- name: Install nginx
+  apt:
+    name:
+      - "nginx"
+      - "git"
+    state: latest
+    autoclean: yes
+  become: yes
+
+- name: Start nginx
+  become: yes
+  service:
+    name: nginx
+    state: started
+
+- name: Allow OpenSSH ports
+  become: yes
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow Nginx ports
+  become: yes
+  ufw:
+    rule: allow
+    name: Nginx Full
+
+- name: Enable UFW
+  become: yes
+  ufw:
+    state: enabled
+
+- name: Update nginx confs for WordPress + PHP
+  template: "src=../templates/default-site.conf dest=/etc/nginx/sites-available/{{server_hostname}} owner=www-data group=www-data mode=0644"
+  become: yes
+
+- name: Enable site
+  file: src=/etc/nginx/sites-available/{{server_hostname}} dest=/etc/nginx/sites-enabled/{{server_hostname}} owner=www-data group=www-data state=link
+  notify:
+    - restart nginx
+  become: yes

@@ -1,0 +1,77 @@
+---
+# - name: Create webroot
+#   file:
+#     state: directory
+#     path: /srv/www/
+#     owner: root
+#     group: root
+#     mode: 0755
+#   become: yes
+
+- name: Check if WordPress directory exists in /var/www
+  stat: path=/var/www/html/wordpress
+  register: check_path
+
+- name: Download WordPress
+  get_url:
+    # url: https://wordpress.org/wordpress-{{ wp_version }}.tar.gz
+    url: https://wordpress.org/latest.tar.gz
+    dest: /var/www/html/latest.tar.gz
+  become: yes
+  # when: not check_path.stat.exists
+
+- name: Extract WordPress
+  unarchive:
+    src: /var/www/html/latest.tar.gz
+    dest: /var/www/html/
+    owner: www-data
+    group: www-data
+    remote_src: yes
+    # copy: no
+  become: yes
+  # when: not check_path.stat.exists
+
+- name: Move WordPress install files
+  command: rm /var/www/html/latest.tar.gz
+  become: yes
+  # when: not check_path.stat.exists
+
+- name: Fetch random salts for WordPress config
+  local_action: command curl https://api.wordpress.org/secret-key/1.1/salt/
+  register: "wp_salt"
+  become: no
+
+- name: Add wp-config
+  template: "src=wp-config.php dest=/var/www/html/wordpress/wp-config.php"
+  become: yes
+
+- name: Update WordPress config file
+  lineinfile:
+    dest: "/var/www/html/wordpress/wp-config.php"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - {
+        "regexp": "define\\('DB_NAME', '(.)+'\\);",
+        "line": "define('DB_NAME', '{{wp_db_name}}');",
+      }
+    - {
+        "regexp": "define\\('DB_USER', '(.)+'\\);",
+        "line": "define('DB_USER', '{{wp_db_user}}');",
+      }
+    - {
+        "regexp": "define\\('DB_PASSWORD', '(.)+'\\);",
+        "line": "define('DB_PASSWORD', '{{wp_db_password}}');",
+      }
+  become: yes
+
+- name: Giving file permission to files
+  become: yes
+  shell: |
+    find /var/www/html/wordpress -type d -exec chmod 755 {} \;
+    find /var/www/html/wordpress -type f -exec chmod 644 {} \;
+    rm /etc/nginx/sites-available/default;
+    rm /etc/nginx/sites-enabled/default
+  notify:
+    - restart nginx
+    - restart php7.4-fpm

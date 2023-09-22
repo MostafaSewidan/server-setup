@@ -1,0 +1,30 @@
+---
+- name: Delete the default configuration
+  command: cp --archive /etc/nginx /etc/nginx-install-backup creates=/etc/nginx-install-backup
+
+- name: Download h5bp
+  get_url:
+    url: https://github.com/h5bp/server-configs-nginx/archive/refs/tags/4.1.0.zip
+    dest: /etc/nginx/
+  become: yes
+
+- name: Extract h5bp
+  unarchive:
+    src: /etc/nginx/4.1.0.zip
+    dest: /etc/nginx/server-configs-nginx-4.1.0
+    owner: www-data
+    group: www-data
+    remote_src: yes
+    # copy: no
+  become: yes
+
+- name: Move h5bp install files
+  command: |
+    mv /etc/nginx/server-configs-nginx-4.1.0/h5bp /etc/nginx
+    mv /etc/nginx/server-configs-nginx-4.1.0/mime.types /etc/nginx
+    mv /etc/nginx/server-configs-nginx-4.1.0/nginx.conf /etc/nginx
+    rm /etc/nginx/server-configs-nginx-4.1.0/ -rf
+
+  become: yes
+# - name: Create the sites-enabled directory
+#   file: path=/etc/nginx/sites-enabled state=directory
