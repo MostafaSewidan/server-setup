@@ -139,14 +139,14 @@ cd /var/www/html
 # https://www.phpmyadmin.net/downloads/
 
 # Download phpMyAdmin
-sudo wget https://files.phpmyadmin.net/phpMyAdmin/5.0.2/phpMyAdmin-5.0.2-all-languages.zip
+sudo wget https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 
 # Extract the downloaded file to a new directory (./pma)
-sudo unzip phpMyAdmin-5.0.2-all-languages.zip
-sudo mv phpMyAdmin-5.0.2-all-languages pma
+sudo unzip phpMyAdmin-5.2.1-all-languages.zip
+sudo mv phpMyAdmin-5.2.1-all-languages pma
 
 # Delete the downloaded file
-sudo rm phpMyAdmin-5.0.2-all-languages.zip
+sudo rm phpMyAdmin-5.2.1-all-languages.zip
 
 # Change files owner and permissions
 cd pma
